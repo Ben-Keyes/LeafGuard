@@ -1,3 +1,11 @@
+FROM node:20-alpine AS frontend_builder
+WORKDIR /frontend
+COPY frontend/package*.json ./
+RUN npm ci
+COPY frontend/ ./
+ENV CI=false
+RUN npm run build
+
 # Base image
 FROM python:3.10-slim
 
@@ -21,7 +29,8 @@ COPY backend/ ./backend
 WORKDIR /app/backend
 
 # Copy React build directly into backend/static/frontend
-COPY frontend/build ./static/frontend
+#COPY frontend/build ./static/frontend
+COPY --from=frontend_builder /frontend/build ./static/frontend
 
 # Exposing port for FastAPI
 EXPOSE 8000
