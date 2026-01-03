@@ -15,8 +15,8 @@ export default function ImageUpload() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  // URL for docker routing
-  const PREDICT_URL = "http://localhost:8000/api/predict";
+  // URL for Render build
+  const PREDICT_URL = "/api/predict";
 
   const clearResultState = () => {
     setPrediction(null);
