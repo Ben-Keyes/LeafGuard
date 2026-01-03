@@ -1,0 +1,87 @@
+{
+	"info": {
+		"_postman_id": "7d33f0fd-61f1-4ea1-9974-4510588a1c16",
+		"name": "LeafGuard",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "15767766"
+	},
+	"item": [
+		{
+			"name": "Root Web Access",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}",
+					"host": [
+						"{{base_url}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Invalid File Type",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"content-type": true,
+					"content-length": true
+				}
+			},
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"description": "A text file",
+							"type": "file",
+							"src": "postman-cloud:///1f0e8977-387a-42e0-bea7-fd0102b51bdc"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{base_url}}/api/predict",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"predict"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Valid File - Tomato Blight",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "",
+							"type": "file",
+							"src": "/C:/Users/benke/OneDrive/Изображения/Model Testing/TomatoBlight.jpg"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{base_url}}/api/predict",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"predict"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
