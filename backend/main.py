@@ -25,7 +25,7 @@ app.add_middleware(
 num_classes = 39
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # The model we intend to use
-model_path = os.path.join(BASE_DIR, "model", "leaf_resnet18_2_epoch_layer4_fc.pth")
+model_path = os.path.join(BASE_DIR, "model", "leaf_resnet18_best_layer4_fc.pth")
 
 # Using ResNet18
 model = models.resnet18(pretrained=False)
@@ -94,6 +94,11 @@ async def predict(file: UploadFile = File(...)):
 
 # Serving the FE
 frontend_dir = os.path.join(BASE_DIR, "static", "frontend")
+
+# Adding assets for design of UI
+assets_dir = os.path.join(BASE_DIR, "assets")
+if os.path.isdir(assets_dir):
+    app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
 
 if os.path.isdir(frontend_dir):
     app.mount("/static", StaticFiles(directory=os.path.join(frontend_dir, "static")), name="static")

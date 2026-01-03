@@ -118,17 +118,29 @@ export default function ImageUpload() {
     (confidence == null ? null : confidence >= threshold);
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-gradient-to-b from-emerald-50 via-white to-emerald-50 px-4 py-10">
+    <div className="relative min-h-[calc(100vh-4rem)] px-4 py-10 overflow-hidden">
+  {/* Background image layer */}
+  <div
+    className="absolute inset-0 bg-center bg-cover opacity-50"
+    style={{ backgroundImage: "url('/assets/leaves-bg.png')" }}
+  />
+
+  {/* soft color overlay */}
+  <div className="absolute inset-0 bg-gradient-to-b from-emerald-50 via-white to-emerald-50 opacity-80" />
+
+  {/* Actual content */}
+  <div className="relative z-10">
+
       <div className="mx-auto w-full max-w-5xl">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-semibold tracking-tight text-emerald-950">
-            Leaf Disease Detector
+            LeafGuard
           </h1>
           <p className="mt-2 text-emerald-900/70">
             Upload a photo of a leaf to predict the most likely disease.
             If the model provides confidence, it’ll show up here too.
-          </p>t
+          </p>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
@@ -393,6 +405,7 @@ export default function ImageUpload() {
           Local demo • React + Tailwind • Backend served via Docker :)
         </p>
       </div>
+    </div>
     </div>
   );
 }
