@@ -3,11 +3,6 @@ node_modules
 *.pt
 *.pth
 
-# Front-end
-frontend/src
-frontend/node_modules
-frontend/public
-
 # Python
 __pycache__/
 __pycache__
