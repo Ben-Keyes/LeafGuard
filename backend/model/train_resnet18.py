@@ -3,15 +3,28 @@ import numpy as np
 # Torch
 import torch
 from torchvision import datasets, transforms, models
+import torchvision.transforms.functional as TF
 from torch.utils.data.sampler import SubsetRandomSampler
 import torch.nn as nn
-
+import random
 # Metrics metrics
 from sklearn.metrics import confusion_matrix, classification_report, f1_score
 
 # For saving the class file
 import json
 import os
+
+# Generating a random gamma value for gamma correction
+class RandomGamma:
+    def __init__(self, gamma_range=(0.8, 1.2), p=0.3):
+        self.gamma_range = gamma_range
+        self.p = p
+
+    def __call__(self, img):
+        if random.random() < self.p:
+            gamma = random.uniform(*self.gamma_range)
+            img = TF.adjust_gamma(img, gamma=gamma)
+        return img
 
 # Helps with running the 2 workers
 if __name__ == '__main__':
@@ -21,13 +34,26 @@ if __name__ == '__main__':
         transforms.Resize((144, 144)),
         transforms.RandomResizedCrop(128, scale=(0.8, 1.0)),
         transforms.RandomRotation(15),
+
+        # Translation + Shear
+        transforms.RandomAffine(
+            degrees=0,
+            translate=(0.10, 0.10),
+            shear=(-10, 10)
+        ),
+
         transforms.ColorJitter(brightness=0.15, contrast=0.15),
+
+        # Gamma correction
+        RandomGamma(gamma_range=(0.85, 1.15), p=0.3),
+
         transforms.ToTensor(),
         transforms.Normalize(
             mean=[0.485, 0.456, 0.406],
             std=[0.229, 0.224, 0.225]
         )
     ])
+
      # Needs normalised aswell
     test_transform = transforms.Compose([
         transforms.Resize((128, 128)),
@@ -165,7 +191,7 @@ if __name__ == '__main__':
     best_val_loss = float("inf")
     patience = 2
     patience_counter = 0
-    best_model_path = "leaf_resnet18_best_layer4_fc.pth"
+    best_model_path = "leaf_resnet18_best_translate_shear_gamma_layer4_fc.pth"
 
     for epoch in range(num_epochs):
         model.train()
