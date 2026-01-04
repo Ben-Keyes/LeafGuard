@@ -23,10 +23,7 @@
 		{
 			"name": "Invalid File Type",
 			"protocolProfileBehavior": {
-				"disabledSystemHeaders": {
-					"content-type": true,
-					"content-length": true
-				}
+				"disabledSystemHeaders": {}
 			},
 			"request": {
 				"method": "POST",
@@ -57,6 +54,37 @@
 		},
 		{
 			"name": "Valid File - Tomato Blight",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {}
+			},
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": "postman-cloud:///1f0e897a-edb5-41c0-93df-8bfe8589df90"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{base_url}}/api/predict",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"predict"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "JPG File - Apple Scab",
 			"request": {
 				"method": "POST",
 				"header": [],
@@ -66,7 +94,63 @@
 						{
 							"key": "",
 							"type": "file",
-							"src": "/C:/Users/benke/OneDrive/Изображения/Model Testing/TomatoBlight.jpg"
+							"src": "postman-cloud:///1f0e902f-a3d1-4980-94df-747d9b9586c6"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{base_url}}/api/predict",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"predict"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "PNG File - Corn Gray Spot",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "",
+							"type": "file",
+							"src": "postman-cloud:///1f0e9033-92f2-44d0-8b74-af65f28320c0"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{base_url}}/api/predict",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"predict"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Random Image (non-leaf)",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "",
+							"type": "file",
+							"src": "postman-cloud:///1f0e9034-f8a9-4020-8b73-2fef1764249d"
 						}
 					]
 				},
