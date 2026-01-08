@@ -31,9 +31,10 @@ if __name__ == '__main__':
 
     # Transformations
     train_transform = transforms.Compose([
-        transforms.Resize((144, 144)),
+        #transforms.Resize((144, 144)),
         transforms.RandomResizedCrop(128, scale=(0.8, 1.0)),
         transforms.RandomRotation(15),
+        transforms.RandomHorizontalFlip(),
 
         # Translation + Shear
         transforms.RandomAffine(
@@ -42,12 +43,19 @@ if __name__ == '__main__':
             shear=(-10, 10)
         ),
 
-        transforms.ColorJitter(brightness=0.15, contrast=0.15),
+        transforms.ColorJitter(brightness=0.15,
+                               contrast=0.15,
+                               saturation=0.2,
+                               hue=0.03),
 
         # Gamma correction
         RandomGamma(gamma_range=(0.85, 1.15), p=0.3),
 
         transforms.ToTensor(),
+
+        # Occlusion AFTER ToTensor
+        transforms.RandomErasing(p=0.25, scale=(0.02, 0.12), ratio=(0.3, 3.3), value='random'),
+
         transforms.Normalize(
             mean=[0.485, 0.456, 0.406],
             std=[0.229, 0.224, 0.225]
@@ -84,6 +92,10 @@ if __name__ == '__main__':
 
     # Number of samples
     num_samples = len(dataset)
+
+    # Seeding split incase needed to reproduce
+    np.random.seed(42)
+    torch.manual_seed(42)
 
     # Shuffle once for randomised training, validation and testing
     indices = np.random.permutation(num_samples)
@@ -168,7 +180,36 @@ if __name__ == '__main__':
     print("Using device:", device)
     model = model.to(device)
 
-    criterion = nn.CrossEntropyLoss()
+    # Class weighted loss
+    # dataset.targets is a list of class indices for each sample in ImageFolder
+    train_targets = np.array(dataset.targets)[train_indices]
+
+    class_counts = np.bincount(train_targets, minlength=num_classes).astype(np.float32)
+
+    # Inverse square root frequency
+    class_weights = 1.0 / np.sqrt(class_counts + 1e-6)
+
+    # Normalising so average weight ~ 1
+    class_weights = class_weights * (num_classes / class_weights.sum())
+
+    # Move weights to torch tensor on device
+    class_weights = torch.tensor(class_weights, dtype=torch.float32).to(device)
+
+    print("Train class counts:", class_counts.astype(int))
+    print("Class weights (first 10):", class_weights[:10].cpu().numpy())
+
+    #Sanitty checking
+    topk = torch.topk(class_weights.cpu(), k=5)
+    print("Most upweighted classes:")
+    for w, idx in zip(topk.values, topk.indices):
+        print(dataset.classes[idx], float(w))
+
+    # criterion = nn.CrossEntropyLoss()
+
+    # Now using class weighted CrossEntropyLoss
+    criterion_train = nn.CrossEntropyLoss(weight=class_weights)
+    criterion_eval = nn.CrossEntropyLoss()  # unweighted
+
     # optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
 
     # Use this if fully frozen
@@ -191,7 +232,7 @@ if __name__ == '__main__':
     best_val_loss = float("inf")
     patience = 2
     patience_counter = 0
-    best_model_path = "leaf_resnet18_best_translate_shear_gamma_layer4_fc.pth"
+    best_model_path = "leaf_resnet18_best_weighted.pth"
 
     for epoch in range(num_epochs):
         model.train()
@@ -205,7 +246,7 @@ if __name__ == '__main__':
 
             optimizer.zero_grad()
             outputs = model(images)
-            loss = criterion(outputs, labels)
+            loss = criterion_train(outputs, labels)
 
             loss.backward()
             optimizer.step()
@@ -242,7 +283,7 @@ if __name__ == '__main__':
                 labels = labels.to(device)
 
                 outputs = model(images)
-                loss = criterion(outputs, labels)
+                loss = criterion_eval(outputs, labels)
 
                 val_loss += loss.item() * images.size(0)
 
