@@ -1,0 +1,25 @@
+Date: Thursday 27th November
+
+Time: 2:00PM
+
+Location: Computer Science Building 0G.018
+
+Attendees: 
+- Ben Keyes
+- Chen Feng
+
+What was discussed:
+
+My CNN model and web application
+- Using a pre-trained model rather than a custom CNN
+- Class imbalance
+- Transformations to apply
+
+Work items:
+- Apply more augmentation techniques (transformations)
+- Remove augmented subfolder due to duplicated images
+- Research how to resolve class imbalance issues
+- Experiment with using a pre-trained model
+
+Next meeting: Interim Demo (Thursday 8th January)
+
