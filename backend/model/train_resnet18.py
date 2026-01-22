@@ -83,7 +83,7 @@ if __name__ == '__main__':
 
     # Save class names in the same folder as the model
     #MODEL_DIR = os.path.dirname(os.path.abspath(__file__))
-    #class_names_path = os.path.join(MODEL_DIR, "class_names.json")
+    #class_names_path = os.path.join(MODEL_DIR, "class_names_tomato.json")
 
     #with open(class_names_path, "w") as f:
         #json.dump(dataset.classes, f)

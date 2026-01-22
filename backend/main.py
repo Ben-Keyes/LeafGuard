@@ -22,7 +22,7 @@ app.add_middleware(
 )
 
 # ML setup
-num_classes = 39
+num_classes = 10 #Change to 39 when not subset training
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # The model we intend to use
 model_path = os.path.join(BASE_DIR, "model", "leaf_resnet18_best_weighted_subset.pth")
@@ -44,7 +44,7 @@ transform = transforms.Compose([
     )
 ])
 
-classes_path = os.path.join(BASE_DIR, "model", "class_names.json")
+classes_path = os.path.join(BASE_DIR, "model", "class_names_tomato.json")
 with open(classes_path, "r") as f:
     classes = json.load(f)
 
