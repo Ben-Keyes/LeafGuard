@@ -14,6 +14,14 @@ from sklearn.metrics import confusion_matrix, classification_report, f1_score
 import json
 import os
 
+from collections import Counter
+
+from torchvision.models import ResNet18_Weights, resnet18
+
+TRAIN_DIR = r"C:\Users\benke\Datasets\plantvillage\unaugmented"
+CUSTOM_VAL_DIR = r"C:\Users\benke\Datasets\custom"
+
+
 # Generating a random gamma value for gamma correction
 class RandomGamma:
     def __init__(self, gamma_range=(0.8, 1.2), p=0.3):
@@ -26,35 +34,44 @@ class RandomGamma:
             img = TF.adjust_gamma(img, gamma=gamma)
         return img
 
+
 # Helps with running the 2 workers
 if __name__ == '__main__':
 
     # Transformations
     train_transform = transforms.Compose([
-        #transforms.Resize((144, 144)),
-        transforms.RandomResizedCrop(128, scale=(0.8, 1.0)),
-        transforms.RandomRotation(15),
+        # transforms.Resize((144, 144)),
+        transforms.RandomResizedCrop(224, scale=(0.8, 1.0)),
+        transforms.RandomRotation(10),
         transforms.RandomHorizontalFlip(),
 
         # Translation + Shear
         transforms.RandomAffine(
             degrees=0,
             translate=(0.10, 0.10),
-            shear=(-10, 10)
+            shear=(-5, 5)
         ),
 
-        transforms.ColorJitter(brightness=0.15,
-                               contrast=0.15,
-                               saturation=0.2,
-                               hue=0.03),
+        transforms.ColorJitter(brightness=0.20,
+                               contrast=0.20,
+                               saturation=0.25,
+                               hue=0.04),
+        # Ensures it won't depend too much on color cues
+        transforms.RandomGrayscale(p=0.05),
 
         # Gamma correction
         RandomGamma(gamma_range=(0.85, 1.15), p=0.3),
 
+        # Photo-realistic transformations
+        #transforms.RandomPerspective(distortion_scale=0.15, p=0.15),
+        transforms.RandomApply([
+            transforms.GaussianBlur(kernel_size=3, sigma=(0.1, 1.0))
+        ], p=0.10),
+
         transforms.ToTensor(),
 
         # Occlusion AFTER ToTensor
-        transforms.RandomErasing(p=0.25, scale=(0.02, 0.12), ratio=(0.3, 3.3), value='random'),
+        transforms.RandomErasing(p=0.05, scale=(0.02, 0.08), ratio=(0.5, 2.0), value='random'),
 
         transforms.Normalize(
             mean=[0.485, 0.456, 0.406],
@@ -62,9 +79,10 @@ if __name__ == '__main__':
         )
     ])
 
-     # Needs normalised aswell
+    # Needs normalised aswell
     test_transform = transforms.Compose([
-        transforms.Resize((128, 128)),
+        transforms.Resize(256),
+        transforms.CenterCrop(224),
         transforms.ToTensor(),
         transforms.Normalize(
             mean=[0.485, 0.456, 0.406],
@@ -77,18 +95,18 @@ if __name__ == '__main__':
 
     # Importing the dataset (unaugmented)
     dataset = datasets.ImageFolder(
-        r"C:\Users\benke\Datasets\plantvillage\unaugmented",
+        TRAIN_DIR,
         transform=None
     )
 
     # Save class names in the same folder as the model
-    #MODEL_DIR = os.path.dirname(os.path.abspath(__file__))
-    #class_names_path = os.path.join(MODEL_DIR, "class_names_tomato.json")
+    MODEL_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "model")
+    os.makedirs(MODEL_DIR, exist_ok=True)
 
-    #with open(class_names_path, "w") as f:
-        #json.dump(dataset.classes, f)
+    with open(os.path.join(MODEL_DIR, "class_names.json"), "w") as f:
+        json.dump(dataset.classes, f, indent=2)
 
-    #print(f"Saved class names to {class_names_path}")
+    # print(f"Saved class names to {class_names_path}")
 
     # Number of samples
     num_samples = len(dataset)
@@ -100,36 +118,56 @@ if __name__ == '__main__':
     # Shuffle once for randomised training, validation and testing
     indices = np.random.permutation(num_samples)
 
-    # Splits (70% train, 15% validation and 15% testing)
+    # Splits (70% train, 30% testing and custom validation)
     train_split = int(0.70 * num_samples)
-    val_split   = int(0.85 * num_samples)
+    # val_split   = int(0.85 * num_samples) -> Replaced
 
     train_indices = indices[:train_split]
-    val_indices   = indices[train_split:val_split]
-    test_indices  = indices[val_split:]
+    # val_indices   = indices[train_split:val_split] -> Replaced
+    test_indices = indices[train_split:]
 
     # Debugging
     print("Classes:", dataset.classes)
     print("Total:", len(dataset))
     print("Training size:", len(train_indices))
-    print("Validation size:", len(val_indices))
+    # print("Validation size:", len(val_indices)) -> Replaced (its 137 btw)
     print("Testing size:", len(test_indices))
 
     # Apply transforms after splitting
     train_dataset = datasets.ImageFolder(
-        r"C:\Users\benke\Datasets\plantvillage\unaugmented",
+        TRAIN_DIR,
         transform=train_transform
     )
 
     val_dataset = datasets.ImageFolder(
-        r"C:\Users\benke\Datasets\plantvillage\unaugmented",
+        CUSTOM_VAL_DIR,
         transform=test_transform
     )
 
+    # Forcing validation dataset to use same mapping as training
+    val_dataset.class_to_idx = train_dataset.class_to_idx
+    val_dataset.classes = train_dataset.classes
+
+    val_dataset.samples = [
+        (path, train_dataset.class_to_idx[os.path.basename(os.path.dirname(path))])
+        for path, _ in val_dataset.samples
+    ]
+    val_dataset.targets = [y for _, y in val_dataset.samples]
+
+    print("Val true label distribution (top 10):")
+    true_counts = Counter(val_dataset.targets)
+    print([(dataset.classes[i], c) for i, c in true_counts.most_common(10)])
+
+    print("Val classes:", len(val_dataset.classes))
+    print("Val samples:", len(val_dataset))
+
+    print("Train == Val class order:", train_dataset.classes == val_dataset.classes)
+
     test_dataset = datasets.ImageFolder(
-        r"C:\Users\benke\Datasets\plantvillage\unaugmented",
+        TRAIN_DIR,
         transform=test_transform
     )
+
     # A good batch size to use
     batch_size = 64
 
@@ -143,7 +181,7 @@ if __name__ == '__main__':
     val_loader = torch.utils.data.DataLoader(
         val_dataset,
         batch_size=batch_size,
-        sampler=SubsetRandomSampler(val_indices),
+        shuffle=False,
         num_workers=2
     )
 
@@ -156,16 +194,17 @@ if __name__ == '__main__':
 
     # Making the model (ResNet18)
     num_classes = len(dataset.classes)
-    model = models.resnet18(pretrained=True)
+    weights = ResNet18_Weights.DEFAULT
+    model = resnet18(weights=weights)
     model.fc = nn.Linear(model.fc.in_features, num_classes)
 
     # Freeze all layers except the final fully connected layer
-    #for param in model.parameters():
-        #param.requires_grad = False
-    #for param in model.fc.parameters():
-        #param.requires_grad = True
+    # for param in model.parameters():
+    # param.requires_grad = False
+    # for param in model.fc.parameters():
+    # param.requires_grad = True
 
-    # Partial freezing, all but fc and layer4
+    # Partial freezing, all but fc
     for p in model.parameters():
         p.requires_grad = False
 
@@ -195,10 +234,17 @@ if __name__ == '__main__':
     # Move weights to torch tensor on device
     class_weights = torch.tensor(class_weights, dtype=torch.float32).to(device)
 
+    # Clamping background class weight as it was a magnet for a lot of predictions
+    bg_idx = dataset.class_to_idx["Background_without_leaves"]
+    print("Background idx:", bg_idx, "old weight:", float(class_weights[bg_idx]))
+
+    class_weights[bg_idx] = 0.2  # Keep around 0-2 to 0.5
+    print("Background new weight:", float(class_weights[bg_idx]))
+
     print("Train class counts:", class_counts.astype(int))
     print("Class weights (first 10):", class_weights[:10].cpu().numpy())
 
-    #Sanitty checking
+    # Sanitty checking
     topk = torch.topk(class_weights.cpu(), k=5)
     print("Most upweighted classes:")
     for w, idx in zip(topk.values, topk.indices):
@@ -207,22 +253,27 @@ if __name__ == '__main__':
     # criterion = nn.CrossEntropyLoss()
 
     # Now using class weighted CrossEntropyLoss
-    criterion_train = nn.CrossEntropyLoss(weight=class_weights)
+    criterion_train = nn.CrossEntropyLoss(weight=class_weights, label_smoothing=0.1)
     criterion_eval = nn.CrossEntropyLoss()  # unweighted
 
     # optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
 
     # Use this if fully frozen
-    #optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=0.001)
+    # optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=0.001)
 
     # Use me if unfreezing fc and layer4
-    optimizer = torch.optim.Adam(
-        filter(lambda p: p.requires_grad, model.parameters()),
-        lr=5e-5,
-        weight_decay=1e-4
+    optimizer = torch.optim.Adam([
+        {"params": model.fc.parameters(), "lr": 5e-4},
+        {"params": model.layer4.parameters(), "lr": 3e-5},
+    ], weight_decay=5e-4)
+
+    # Trying to prevent drift after 3 epochs
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer, mode="min", factor=0.5, patience=1, threshold=1e-3
     )
+
     # Typically do 2,3 or 5
-    num_epochs = 5
+    num_epochs = 6
     train_losses = []
     val_losses = []
     train_accs = []
@@ -230,15 +281,16 @@ if __name__ == '__main__':
 
     # Stopping training if no noticable improvement
     best_val_loss = float("inf")
-    patience = 2
+    patience = 4
     patience_counter = 0
-    best_model_path = "leaf_resnet18_best_weighted.pth"
+    best_model_path = "leaf_resnet18_best_weighted_refined_D.pth"
 
     for epoch in range(num_epochs):
         model.train()
         running_loss = 0.0
         correct = 0
         total = 0
+        val_pred_counts = Counter()
 
         for images, labels in train_loader:
             images = images.to(device)
@@ -292,6 +344,9 @@ if __name__ == '__main__':
                 # Top-1
                 confidence, predicted = torch.max(probs, 1)
 
+                # Checking most predicted classes
+                val_pred_counts.update(predicted.cpu().numpy().tolist())
+
                 # Top3
                 top3 = torch.topk(probs, k=3, dim=1).indices  # shape: [batch, 3]
                 top3_correct += (top3 == labels.unsqueeze(1)).any(dim=1).sum().item()
@@ -301,9 +356,11 @@ if __name__ == '__main__':
                 val_total += labels.size(0)
                 val_correct += (predicted == labels).sum().item()
 
-        epoch_val_loss = val_loss / len(val_indices)
+        epoch_val_loss = val_loss / len(val_dataset)
         epoch_val_acc = val_correct / val_total
         epoch_val_top3 = top3_correct / val_total
+
+        scheduler.step(epoch_val_loss)
 
         val_losses.append(epoch_val_loss)
         val_accs.append(epoch_val_acc)
@@ -315,6 +372,9 @@ if __name__ == '__main__':
             f"Val Loss: {epoch_val_loss:.4f} | Val Acc: {epoch_val_acc * 100:.2f}% | "
             f"Val Top-3: {epoch_val_top3 * 100:.2f}%"
         )
+        # Metrics to ensure class isn't offsetting
+        print("Top val preds:", [(dataset.classes[i], c) for i, c in val_pred_counts.most_common(5)])
+
         # Early stopping
         if epoch_val_loss < best_val_loss:
             best_val_loss = epoch_val_loss
@@ -330,10 +390,6 @@ if __name__ == '__main__':
             print("Early stopping triggered")
             break
 
-    # Saving the model to file
-    #torch.save(model.state_dict(), "leaf_resnet18_3_epoch_layer4_fc.pth")
-    #print("Model saved as leaf_resnet18_3_epoch_layer4_fc.pth")
-
     model.load_state_dict(torch.load(best_model_path, map_location=device))
     print(f"Loaded best model from {best_model_path}")
 
@@ -343,7 +399,7 @@ if __name__ == '__main__':
     test_total = 0
     test_confidences = []
 
-    #Storinge predictions/labels for confusion matrix + report
+    # Storinge predictions/labels for confusion matrix + report
     all_test_labels = []
     all_test_preds = []
     all_test_conf = []

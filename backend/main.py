@@ -22,10 +22,13 @@ app.add_middleware(
 )
 
 # ML setup
-num_classes = 10 #Change to 39 when not subset training
+num_classes = 39
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # The model we intend to use
-model_path = os.path.join(BASE_DIR, "model", "leaf_resnet18_best_weighted_subset.pth")
+model_path = os.path.join(BASE_DIR, "model", "leaf_resnet18_best_weighted.pth")
+# My custom validation dataset
+VAL_DIR = os.path.join(BASE_DIR, "data", "custom_val")
+
 
 # Using ResNet18
 model = models.resnet18(pretrained=False)
@@ -44,7 +47,7 @@ transform = transforms.Compose([
     )
 ])
 
-classes_path = os.path.join(BASE_DIR, "model", "class_names_tomato.json")
+classes_path = os.path.join(BASE_DIR, "model", "class_names.json")
 with open(classes_path, "r") as f:
     classes = json.load(f)
 
