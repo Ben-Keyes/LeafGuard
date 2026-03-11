@@ -25,7 +25,7 @@ app.add_middleware(
 num_classes = 39
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # The model we intend to use
-model_path = os.path.join(BASE_DIR, "model", "leaf_resnet18_best_weighted.pth")
+model_path = os.path.join(BASE_DIR, "model", "leaf_resnet18_best_weighted_refined_D.pth")
 # My custom validation dataset
 VAL_DIR = os.path.join(BASE_DIR, "data", "custom_val")
 

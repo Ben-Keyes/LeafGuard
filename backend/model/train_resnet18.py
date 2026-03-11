@@ -21,20 +21,6 @@ from torchvision.models import ResNet18_Weights, resnet18
 TRAIN_DIR = r"C:\Users\benke\Datasets\plantvillage\unaugmented"
 CUSTOM_VAL_DIR = r"C:\Users\benke\Datasets\custom"
 
-
-# Generating a random gamma value for gamma correction
-class RandomGamma:
-    def __init__(self, gamma_range=(0.8, 1.2), p=0.3):
-        self.gamma_range = gamma_range
-        self.p = p
-
-    def __call__(self, img):
-        if random.random() < self.p:
-            gamma = random.uniform(*self.gamma_range)
-            img = TF.adjust_gamma(img, gamma=gamma)
-        return img
-
-
 # Helps with running the 2 workers
 if __name__ == '__main__':
 
@@ -56,11 +42,9 @@ if __name__ == '__main__':
                                contrast=0.20,
                                saturation=0.25,
                                hue=0.04),
-        # Ensures it won't depend too much on color cues
-        transforms.RandomGrayscale(p=0.05),
 
         # Gamma correction
-        RandomGamma(gamma_range=(0.85, 1.15), p=0.3),
+        #RandomGamma(gamma_range=(0.85, 1.15), p=0.3),
 
         # Photo-realistic transformations
         #transforms.RandomPerspective(distortion_scale=0.15, p=0.15),
@@ -71,7 +55,7 @@ if __name__ == '__main__':
         transforms.ToTensor(),
 
         # Occlusion AFTER ToTensor
-        transforms.RandomErasing(p=0.05, scale=(0.02, 0.08), ratio=(0.5, 2.0), value='random'),
+        #transforms.RandomErasing(p=0.05, scale=(0.02, 0.08), ratio=(0.5, 2.0), value='random'),
 
         transforms.Normalize(
             mean=[0.485, 0.456, 0.406],
@@ -81,8 +65,7 @@ if __name__ == '__main__':
 
     # Needs normalised aswell
     test_transform = transforms.Compose([
-        transforms.Resize(256),
-        transforms.CenterCrop(224),
+        transforms.Resize((224,224)),
         transforms.ToTensor(),
         transforms.Normalize(
             mean=[0.485, 0.456, 0.406],
@@ -175,21 +158,24 @@ if __name__ == '__main__':
         train_dataset,
         batch_size=batch_size,
         sampler=SubsetRandomSampler(train_indices),
-        num_workers=2
+        num_workers=4,
+        persistent_workers=True
     )
 
     val_loader = torch.utils.data.DataLoader(
         val_dataset,
         batch_size=batch_size,
         shuffle=False,
-        num_workers=2
+        num_workers=4,
+        persistent_workers=True
     )
 
     test_loader = torch.utils.data.DataLoader(
         test_dataset,
         batch_size=batch_size,
         sampler=SubsetRandomSampler(test_indices),
-        num_workers=2
+        num_workers=4,
+        persistent_workers=True
     )
 
     # Making the model (ResNet18)
@@ -280,10 +266,10 @@ if __name__ == '__main__':
     val_accs = []
 
     # Stopping training if no noticable improvement
-    best_val_loss = float("inf")
+    best_val_acc = 0.0
     patience = 4
     patience_counter = 0
-    best_model_path = "leaf_resnet18_best_weighted_refined_D.pth"
+    best_model_path = "leaf_resnet18_best_weighted_refined_F.pth"
 
     for epoch in range(num_epochs):
         model.train()
@@ -376,15 +362,15 @@ if __name__ == '__main__':
         print("Top val preds:", [(dataset.classes[i], c) for i, c in val_pred_counts.most_common(5)])
 
         # Early stopping
-        if epoch_val_loss < best_val_loss:
-            best_val_loss = epoch_val_loss
+        if epoch_val_acc < best_val_acc:
+            best_val_acc = epoch_val_loss
             patience_counter = 0
 
             torch.save(model.state_dict(), best_model_path)
-            print(f"Best model saved to {best_model_path} (val loss {best_val_loss:.4f})")
+            print(f"Best model saved to {best_model_path} (val accuracy {best_val_acc:.4f})")
         else:
             patience_counter += 1
-            print(f"No val loss improvement ({patience_counter}/{patience})")
+            print(f"No val accuracy improvement ({patience_counter}/{patience})")
 
         if patience_counter >= patience:
             print("Early stopping triggered")
