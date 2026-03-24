@@ -39,7 +39,7 @@ model.to("cpu")
 
 # Transformations (augmenting dataset)
 transform = transforms.Compose([
-    transforms.Resize((128, 128)),
+    transforms.Resize((224, 224)),
     transforms.ToTensor(),
     transforms.Normalize(
         mean=[0.485, 0.456, 0.406],

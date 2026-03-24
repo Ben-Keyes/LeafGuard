@@ -363,7 +363,7 @@ if __name__ == '__main__':
 
         # Early stopping
         if epoch_val_acc < best_val_acc:
-            best_val_acc = epoch_val_loss
+            best_val_acc = epoch_val_acc
             patience_counter = 0
 
             torch.save(model.state_dict(), best_model_path)
