@@ -27,7 +27,7 @@ if __name__ == '__main__':
     # Transformations
     train_transform = transforms.Compose([
         # transforms.Resize((144, 144)),
-        transforms.RandomResizedCrop(224, scale=(0.8, 1.0)),
+        transforms.RandomResizedCrop(160, scale=(0.8, 1.0)),
         transforms.RandomRotation(10),
         transforms.RandomHorizontalFlip(),
 
@@ -65,7 +65,7 @@ if __name__ == '__main__':
 
     # Needs normalised aswell
     test_transform = transforms.Compose([
-        transforms.Resize((224,224)),
+        transforms.Resize((160,160)),
         transforms.ToTensor(),
         transforms.Normalize(
             mean=[0.485, 0.456, 0.406],
@@ -269,7 +269,7 @@ if __name__ == '__main__':
     best_val_acc = 0.0
     patience = 4
     patience_counter = 0
-    best_model_path = "leaf_resnet18_best_weighted_refined_F.pth"
+    best_model_path = "leaf_resnet18_GPU.pth"
 
     for epoch in range(num_epochs):
         model.train()
@@ -362,7 +362,7 @@ if __name__ == '__main__':
         print("Top val preds:", [(dataset.classes[i], c) for i, c in val_pred_counts.most_common(5)])
 
         # Early stopping
-        if epoch_val_acc < best_val_acc:
+        if epoch_val_acc > best_val_acc:
             best_val_acc = epoch_val_acc
             patience_counter = 0
 
