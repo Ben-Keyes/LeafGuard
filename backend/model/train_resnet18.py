@@ -151,7 +151,7 @@ if __name__ == '__main__':
         transform=test_transform
     )
 
-    # A good batch size to use
+    # Highest performing batch size
     batch_size = 64
 
     train_loader = torch.utils.data.DataLoader(
@@ -180,27 +180,28 @@ if __name__ == '__main__':
 
     # Making the model (ResNet18)
     num_classes = len(dataset.classes)
+
     weights = ResNet18_Weights.DEFAULT
     model = resnet18(weights=weights)
-    model.fc = nn.Linear(model.fc.in_features, num_classes)
 
-    # Freeze all layers except the final fully connected layer
-    # for param in model.parameters():
-    # param.requires_grad = False
-    # for param in model.fc.parameters():
-    # param.requires_grad = True
+    in_features = model.fc.in_features
+    model.fc = nn.Sequential(
+        nn.Dropout(0.3),
+        nn.Linear(in_features, num_classes)
+    )
 
-    # Partial freezing, all but fc
+    # Freeze everything
     for p in model.parameters():
         p.requires_grad = False
 
+    # Unfreeze layer4 & fc
     for name, p in model.named_parameters():
         if name.startswith("layer4") or name.startswith("fc"):
             p.requires_grad = True
 
     print("\n ResNet18 Initialised - now training \n")
 
-    # Device selection (CPU cus I don't have GPU)
+    # Device selection (Using GPU when available)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print("Using device:", device)
     model = model.to(device)
@@ -267,7 +268,7 @@ if __name__ == '__main__':
 
     # Stopping training if no noticable improvement
     best_val_acc = 0.0
-    patience = 4
+    patience = 3
     patience_counter = 0
     best_model_path = "leaf_resnet18_GPU.pth"
 
@@ -362,7 +363,8 @@ if __name__ == '__main__':
         print("Top val preds:", [(dataset.classes[i], c) for i, c in val_pred_counts.most_common(5)])
 
         # Early stopping
-        if epoch_val_acc > best_val_acc:
+        min_delta = 0.005 # Prevents noise from implying a better model
+        if epoch_val_acc > best_val_acc + min_delta:
             best_val_acc = epoch_val_acc
             patience_counter = 0
 
