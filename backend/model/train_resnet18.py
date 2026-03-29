@@ -3,10 +3,8 @@ import numpy as np
 # Torch
 import torch
 from torchvision import datasets, transforms, models
-import torchvision.transforms.functional as TF
 from torch.utils.data.sampler import SubsetRandomSampler
 import torch.nn as nn
-import random
 # Metrics metrics
 from sklearn.metrics import confusion_matrix, classification_report, f1_score
 
@@ -27,7 +25,7 @@ if __name__ == '__main__':
     # Transformations
     train_transform = transforms.Compose([
         # transforms.Resize((144, 144)),
-        transforms.RandomResizedCrop(160, scale=(0.8, 1.0)),
+        transforms.RandomResizedCrop(224, scale=(0.8, 1.0)),
         transforms.RandomRotation(10),
         transforms.RandomHorizontalFlip(),
 
@@ -43,11 +41,8 @@ if __name__ == '__main__':
                                saturation=0.25,
                                hue=0.04),
 
-        # Gamma correction
-        #RandomGamma(gamma_range=(0.85, 1.15), p=0.3),
-
         # Photo-realistic transformations
-        #transforms.RandomPerspective(distortion_scale=0.15, p=0.15),
+        #transforms.RandomPerspective(distortion_scale=0.1, p=0.10),
         transforms.RandomApply([
             transforms.GaussianBlur(kernel_size=3, sigma=(0.1, 1.0))
         ], p=0.10),
@@ -65,7 +60,7 @@ if __name__ == '__main__':
 
     # Needs normalised aswell
     test_transform = transforms.Compose([
-        transforms.Resize((160,160)),
+        transforms.Resize((224,224)),
         transforms.ToTensor(),
         transforms.Normalize(
             mean=[0.485, 0.456, 0.406],
@@ -97,6 +92,7 @@ if __name__ == '__main__':
     # Seeding split incase needed to reproduce
     np.random.seed(42)
     torch.manual_seed(42)
+    torch.cuda.manual_seed_all(42)
 
     # Shuffle once for randomised training, validation and testing
     indices = np.random.permutation(num_samples)
@@ -186,7 +182,7 @@ if __name__ == '__main__':
 
     in_features = model.fc.in_features
     model.fc = nn.Sequential(
-        nn.Dropout(0.3),
+        nn.Dropout(0.5),
         nn.Linear(in_features, num_classes)
     )
 
@@ -225,13 +221,13 @@ if __name__ == '__main__':
     bg_idx = dataset.class_to_idx["Background_without_leaves"]
     print("Background idx:", bg_idx, "old weight:", float(class_weights[bg_idx]))
 
-    class_weights[bg_idx] = 0.2  # Keep around 0-2 to 0.5
+    class_weights[bg_idx] = 0.2 # This is the best weight to clamp at
     print("Background new weight:", float(class_weights[bg_idx]))
 
     print("Train class counts:", class_counts.astype(int))
     print("Class weights (first 10):", class_weights[:10].cpu().numpy())
 
-    # Sanitty checking
+    # Sanity checking
     topk = torch.topk(class_weights.cpu(), k=5)
     print("Most upweighted classes:")
     for w, idx in zip(topk.values, topk.indices):
@@ -260,17 +256,17 @@ if __name__ == '__main__':
     )
 
     # Typically do 2,3 or 5
-    num_epochs = 6
+    num_epochs = 10
     train_losses = []
     val_losses = []
     train_accs = []
     val_accs = []
 
-    # Stopping training if no noticable improvement
+    # Stopping training if no noticeable improvement
     best_val_acc = 0.0
     patience = 3
     patience_counter = 0
-    best_model_path = "leaf_resnet18_GPU.pth"
+    best_model_path = "leaf_resnet18_GPU1.pth"
 
     for epoch in range(num_epochs):
         model.train()
@@ -334,7 +330,7 @@ if __name__ == '__main__':
                 # Checking most predicted classes
                 val_pred_counts.update(predicted.cpu().numpy().tolist())
 
-                # Top3
+                # Top-3
                 top3 = torch.topk(probs, k=3, dim=1).indices  # shape: [batch, 3]
                 top3_correct += (top3 == labels.unsqueeze(1)).any(dim=1).sum().item()
 
