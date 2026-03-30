@@ -14,7 +14,7 @@ import os
 
 from collections import Counter
 
-from torchvision.models import ResNet18_Weights, resnet18
+from torchvision.models import ResNet50_Weights, resnet50
 
 TRAIN_DIR = r"C:\Users\benke\Datasets\plantvillage\unaugmented"
 CUSTOM_VAL_DIR = r"C:\Users\benke\Datasets\custom"
@@ -174,11 +174,11 @@ if __name__ == '__main__':
         persistent_workers=True
     )
 
-    # Making the model (ResNet18)
+    # Making the model (ResNet50)
     num_classes = len(dataset.classes)
 
-    weights = ResNet18_Weights.DEFAULT
-    model = resnet18(weights=weights)
+    weights = ResNet50_Weights.DEFAULT
+    model = resnet50(weights=weights)
 
     in_features = model.fc.in_features
     model.fc = nn.Sequential(
@@ -195,7 +195,7 @@ if __name__ == '__main__':
         if name.startswith("layer4") or name.startswith("fc"):
             p.requires_grad = True
 
-    print("\n ResNet18 Initialised - now training \n")
+    print("\n ResNet50 Initialised - now training \n")
 
     # Device selection (Using GPU when available)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -266,7 +266,7 @@ if __name__ == '__main__':
     best_val_acc = 0.0
     patience = 3
     patience_counter = 0
-    best_model_path = "leaf_resnet18_GPU1.pth"
+    best_model_path = os.path.join(MODEL_DIR, "leaf_ResNet50_GPU1.pth")
 
     for epoch in range(num_epochs):
         model.train()

@@ -6,7 +6,7 @@ from PIL import Image
 import torch
 import torchvision.transforms as transforms
 import os, io
-from torchvision import models
+from torchvision.models import ResNet50_Weights, resnet50
 import torch.nn as nn
 import json
 
@@ -24,22 +24,31 @@ app.add_middleware(
 # ML setup
 num_classes = 39
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 # The model we intend to use
-model_path = os.path.join(BASE_DIR, "model", "leaf_resnet18_best_weighted_refined_D.pth")
+model_path = os.path.join(BASE_DIR, "model", "leaf_ResNet50_GPU1.pth")
 # My custom validation dataset
 VAL_DIR = os.path.join(BASE_DIR, "data", "custom_val")
 
+# Device selection
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print("Using device:", device)
 
-# Using ResNet18
-model = models.resnet18(pretrained=False)
-model.fc = nn.Linear(model.fc.in_features, num_classes)
-model.load_state_dict(torch.load(model_path, map_location="cpu"))
+# Using ResNet50
+model = resnet50(weights=None)
+model.fc = nn.Sequential(
+    nn.Dropout(0.5),
+    nn.Linear(model.fc.in_features, num_classes)
+)
+
+# Loading weights onto correct device
+model.load_state_dict(torch.load(model_path, map_location=device))
+model.to(device)
 model.eval()
-model.to("cpu")
 
 # Transformations (augmenting dataset)
 transform = transforms.Compose([
-    transforms.Resize((224, 224)),
+    transforms.Resize((288, 288)),
     transforms.ToTensor(),
     transforms.Normalize(
         mean=[0.485, 0.456, 0.406],
