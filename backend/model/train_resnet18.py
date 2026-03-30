@@ -25,7 +25,7 @@ if __name__ == '__main__':
     # Transformations
     train_transform = transforms.Compose([
         # transforms.Resize((144, 144)),
-        transforms.RandomResizedCrop(224, scale=(0.8, 1.0)),
+        transforms.RandomResizedCrop(288, scale=(0.8, 1.0)),
         transforms.RandomRotation(10),
         transforms.RandomHorizontalFlip(),
 
@@ -42,7 +42,7 @@ if __name__ == '__main__':
                                hue=0.04),
 
         # Photo-realistic transformations
-        #transforms.RandomPerspective(distortion_scale=0.1, p=0.10),
+        #transforms.RandomPerspective(distortion_scale=0.1, p=0.20),
         transforms.RandomApply([
             transforms.GaussianBlur(kernel_size=3, sigma=(0.1, 1.0))
         ], p=0.10),
@@ -60,7 +60,7 @@ if __name__ == '__main__':
 
     # Needs normalised aswell
     test_transform = transforms.Compose([
-        transforms.Resize((224,224)),
+        transforms.Resize((288,288)),
         transforms.ToTensor(),
         transforms.Normalize(
             mean=[0.485, 0.456, 0.406],
@@ -236,7 +236,7 @@ if __name__ == '__main__':
     # criterion = nn.CrossEntropyLoss()
 
     # Now using class weighted CrossEntropyLoss
-    criterion_train = nn.CrossEntropyLoss(weight=class_weights, label_smoothing=0.1)
+    criterion_train = nn.CrossEntropyLoss(weight=class_weights, label_smoothing=0.20)
     criterion_eval = nn.CrossEntropyLoss()  # unweighted
 
     # optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
@@ -246,7 +246,7 @@ if __name__ == '__main__':
 
     # Use me if unfreezing fc and layer4
     optimizer = torch.optim.Adam([
-        {"params": model.fc.parameters(), "lr": 5e-4},
+        {"params": model.fc.parameters(), "lr": 1e-3},
         {"params": model.layer4.parameters(), "lr": 3e-5},
     ], weight_decay=5e-4)
 
@@ -255,8 +255,8 @@ if __name__ == '__main__':
         optimizer, mode="min", factor=0.5, patience=1, threshold=1e-3
     )
 
-    # Typically do 2,3 or 5
-    num_epochs = 10
+    # Typically do 3-5, 10 if finalising performance.
+    num_epochs = 5
     train_losses = []
     val_losses = []
     train_accs = []
