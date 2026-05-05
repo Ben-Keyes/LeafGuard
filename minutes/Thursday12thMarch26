@@ -1,0 +1,30 @@
+Date: Thursday 12th March
+
+Time: 3:00PM
+
+Location: Computer Science Building 0G.018
+
+Attendees: 
+- Ben Keyes
+- Abbie Walsh
+- Ben Loyal
+- Chen Feng
+
+What was discussed:
+
+- Finetuning dissertation draft further
+- Different ablations that can be performed
+
+Work items:
+
+- Perhaps do some ablation experiment ssuch as changing resnet18 to resnet34
+- adjust training weights more
+- Add chapters to written bit
+- FRs could be in a table
+- Follow the outlined template
+- Add use case diagram above FR somewhere in 2.X
+- There is a way I can make resnet accept a different size other than 224x224 which could improve speed greatly
+- Follow example paper approaches
+
+Next meeting: TBC
+
