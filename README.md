@@ -9,67 +9,89 @@ spread.
 
 ## 🚀 Features
 
-**- Upload leaf images via an intuitive user-friendly web interface**
+- **Upload leaf images via a user-friendly web interface**
 
-**- Deep learning–based disease classification**
+- **Deep learning–based disease classification**
 
-**- Confidence scores and top-3 predictions for interpretability**
+- **Confidence scores and top-3 predictions for interpretability**
 
-**- Low-confidence warnings (threshold = 0.65) to highlight uncertain predictions**
+- **Low-confidence warnings (threshold = 0.50) to highlight uncertain predictions**
 
-**- End-to-end system (frontend + backend + model inference)**
+- **End-to-end system (frontend + backend + model inference)**
 
-**- Containerised using Docker**
+- **Containerised using Docker**
 
 ## 🧩 System Architecture
 
-**React + Tailwind UI -> FastAPI REST API -> PyTorch Model Inference -> JSON Response (class, confidence, top-3)**
+**Frontend (React + Tailwind) → Backend (FastAPI) → Model (PyTorch ResNet50) → JSON Response**
 
 _Frontend: React, Tailwind CSS_
 
 _Backend: FastAPI (Python)_
 
-_Model: PyTorch (Baseline CNN + ResNet18 via transfer learning)_
+_Model: PyTorch (ResNet50)_
 
 _Deployment: Docker, Render_
 
-## 🧠 Machine Learning Models
-### Baseline CNN
+## 🧠 Machine Learning Model
 
-**- Custom CNN trained from scratch**
+### ResNet50 (Transfer Learning)
 
-**- Used to establish a performance reference point**
+- **Pretrained ResNet50 weights fine-tuned on leaf disease data [PlantVillage dataset]**
 
-**- Validation accuracy ≈ 85%**
+- **Custom validation dataset**
 
+- **Generalisation Top-1 accuracy ≈ 40%**
 
-### ResNet18 (Transfer Learning)
+- **Generalisation Top-3 accuracy ≈ 57%**
 
-**- Pretrained ResNet18 fine-tuned on leaf disease data**
-
-**- Significantly improved performance and confidence stability**
-
-**- Test accuracy ≈ 94%**
-
-**- Faster convergence (≈3 epochs)**
+- **PlantVillage Training Accuracy ≈ 99%**
 
 
-## Key Findings
+## 🔬 Key Findings
 
 ### What works
-Add me
+- Custom validation dataset informed finetuning of model
+- Top-3 predictions improve usability despite low Top-1 accuracy
+- Confidence thresholds help prevent misleading predictions
+
+### Limitations
+- Model struggles with real-world images outside the training domain
+- High training accuracy indicates overfitting to PlantVillage dataset
 
 ## Live Demo
 
-**Frontend demo (if deployed):
+**Frontend demo (May take a minute to deploy as it is 3rd-party hosted):
 👉 https://leafguard.onrender.com**
 
+_NB: Inference times are significantly greater than when run locally_
+
+## Local Run
+
+To build and run the project locally:
+
+```bash
+cd Leafguard/frontend
+npm run build
+
+cd ..
+docker build -t leafguard .
+
+docker run -p 8000:8000 leafguard
+
+```
+
+## 💡 What this does
+- `npm run build` → builds the frontend  
+- `docker build` → creates a container  
+- `docker run` → runs the app on **http://localhost:8000**
 
 
+## Testing 
 A Postman collection is used for regression testing, including:
 
-**- Valid image uploads**
+- **Valid image uploads**
 
-**- Invalid file types**
+- **Invalid file types**
 
-**- Missing file handling**
+- **Missing file handling**
