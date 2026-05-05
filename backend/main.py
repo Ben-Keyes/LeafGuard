@@ -26,7 +26,7 @@ num_classes = 39
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # The model we intend to use
-model_path = os.path.join(BASE_DIR, "model", "leaf_ResNet50_GPU1.pth")
+model_path = os.path.join(BASE_DIR, "model", "leaf_ResNet50_GPU2.pth")
 # My custom validation dataset
 VAL_DIR = os.path.join(BASE_DIR, "data", "custom_val")
 
@@ -61,7 +61,7 @@ with open(classes_path, "r") as f:
     classes = json.load(f)
 
 # Confidence threshold
-THRESHOLD = 0.65
+THRESHOLD = 0.50
 
 # API routing
 @app.post("/api/predict")

@@ -110,8 +110,8 @@ export default function ImageUpload() {
     prediction?.confidenceScore ??
     null;
 
-  // Low confidence thresholding (< 0.65)
-  const threshold = prediction?.threshold ?? 0.65;
+  // Low confidence thresholding (< 0.50)
+  const threshold = prediction?.threshold ?? 0.50;
   const isConfident =
     prediction?.is_confident ??
     prediction?.isConfident ??

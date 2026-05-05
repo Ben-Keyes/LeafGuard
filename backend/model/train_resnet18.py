@@ -256,7 +256,7 @@ if __name__ == '__main__':
     )
 
     # Typically do 3-5, 10 if finalising performance.
-    num_epochs = 5
+    num_epochs = 10
     train_losses = []
     val_losses = []
     train_accs = []
@@ -264,9 +264,9 @@ if __name__ == '__main__':
 
     # Stopping training if no noticeable improvement
     best_val_acc = 0.0
-    patience = 3
+    patience = 10
     patience_counter = 0
-    best_model_path = os.path.join(MODEL_DIR, "leaf_ResNet50_GPU1.pth")
+    best_model_path = os.path.join(MODEL_DIR, "leaf_ResNet50_GPU2.pth")
 
     for epoch in range(num_epochs):
         model.train()
