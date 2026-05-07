@@ -47,6 +47,11 @@ _Deployment: Docker, Render_
 
 - **PlantVillage Training Accuracy ≈ 99%**
 
+### Datasets
+
+- **Custom Validation Dataset:** [OneDrive link to zipped folder](https://qubstudentcloud-my.sharepoint.com/:u:/g/personal/40365576_ads_qub_ac_uk/IQD6c6Y2VIveRJg0kBLXLU82ASNj4pZHKggWc95ASmHkRU0?e=eZOZcG)
+
+- **PlantVillage Dataset:** [OneDrive Link to zipped folder](https://qubstudentcloud-my.sharepoint.com/:u:/g/personal/40365576_ads_qub_ac_uk/IQDuVi3sjtm9Q7eKS3jXml46AUjLvVIJ1du1QV6Vxw276Fw?e=hOa9cl)
 
 ## 🔬 Key Findings
 
