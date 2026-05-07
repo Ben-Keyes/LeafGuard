@@ -138,8 +138,7 @@ export default function ImageUpload() {
             LeafGuard
           </h1>
           <p className="mt-2 text-emerald-900/70">
-            Upload a photo of a leaf to predict the most likely disease.
-            If the model provides confidence, it’ll show up here too.
+            Upload a photo of a leaf to predict the most likely plant disease and view confidence scores.
           </p>
         </div>
 
@@ -209,7 +208,7 @@ export default function ImageUpload() {
                 </div>
 
                 <p className="text-xs text-emerald-900/60">
-                  Tip: close-up leaf, good lighting, minimal background works
+                  Tip: Use a close-up image with good lighting and minimal background clutter
                   best.
                 </p>
               </div>
@@ -263,13 +262,10 @@ export default function ImageUpload() {
           {/* Results panel */}
           <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-emerald-100">
             <h2 className="text-lg font-semibold text-emerald-950">Result</h2>
-            <p className="mt-1 text-sm text-emerald-900/70">
-              Your prediction will show here after you upload an image.
-            </p>
 
             {!prediction && !isLoading && (
               <div className="mt-6 rounded-xl border border-emerald-100 bg-emerald-50/50 p-4 text-sm text-emerald-900/70">
-                No result yet — choose an image and click{" "}
+                No prediction yet — choose an image and click{" "}
                 <span className="font-medium">Upload & predict</span>.
               </div>
             )}
@@ -402,7 +398,7 @@ export default function ImageUpload() {
         </div>
 
         <p className="mt-8 text-center text-xs text-emerald-900/40">
-          Local demo • React + Tailwind • Backend served via Docker :)
+          React + Tailwind frontend • FastAPI • PyTorch backend • Docker deployment
         </p>
       </div>
     </div>
